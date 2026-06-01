@@ -5,7 +5,7 @@
 
 #include "init.h"
 #include "LCD_GUI.h"
-#include "LCD_Touch.h"
+
 #include "lcd.h"
 
 #include "bmp.h"
