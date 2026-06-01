@@ -11,16 +11,16 @@
 void button_init(void);
 
 /**
- * @brief  Wartet auf Taster S1..S6 (PG0..PG5) oder Nucleo-User-Taster.
+ * @brief  Wartet auf Druck und Loslassen des blauen User-Tasters.
  * @param  Keine
  * @retval Keiner (void)
  */
 void button_waitForPress(void);
 
 /**
- * @brief  Prueft den aktuellen Tasterzustand.
- * @retval true  Mindestens ein Taster gedrueckt
- * @retval false Kein Taster gedrueckt
+ * @brief  Prueft den blauen User-Taster.
+ * @retval true  Taster gedrueckt
+ * @retval false Taster nicht gedrueckt
  */
 bool button_isPressed(void);
 

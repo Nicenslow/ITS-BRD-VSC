@@ -313,11 +313,11 @@ int bmp_readAndDisplay(void) {
 
     openNextFile();
     if (NOK == readHeaders(&info)) {
-        discardRestOfFile();
+        markFileIncomplete();
         return NOK;
     }
     if (NOK == displayBitmap(&info)) {
-        discardRestOfFile();
+        markFileIncomplete();
         return NOK;
     }
     discardRestOfFile();

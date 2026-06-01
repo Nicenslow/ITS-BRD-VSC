@@ -4,9 +4,17 @@
  */
 
 #include "bmp_check.h"
+#include "bmp.h"
 #include "errorhandler.h"
 
 #include <stddef.h>
+
+/**
+ * @brief  Berechnet die Zeilenlaenge in Bytes inklusive 4-Byte-Ausrichtung.
+ */
+static uint32_t calcRowSize(uint32_t width, uint16_t bitCount) {
+    return (((width * (uint32_t)bitCount) + 31u) / 32u) * 4u;
+}
 
 int basicChecks(const BITMAPFILEHEADER *fileHeader, const BITMAPINFOHEADER *infoHeader) {
     RETURN_NOK_ON_ERR(fileHeader == NULL || infoHeader == NULL, "basicChecks: null pointer");
@@ -42,6 +50,9 @@ int basicChecks(const BITMAPFILEHEADER *fileHeader, const BITMAPINFOHEADER *info
 
     DWORD minOffset = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER) + paletteBytes;
     RETURN_NOK_ON_ERR(fileHeader->bfOffBits < minOffset, "basicChecks: invalid data offset");
+
+    RETURN_NOK_ON_ERR(calcRowSize((uint32_t)infoHeader->biWidth, infoHeader->biBitCount) > BMP_MAX_ROW_BYTES,
+                      "basicChecks: row too large");
 
     return EOK;
 }

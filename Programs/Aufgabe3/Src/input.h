@@ -22,6 +22,8 @@ extern void openNextFile(void);
  */
 extern void discardRestOfFile(void);
 
+extern void markFileIncomplete(void);
+
 /**
  * @brief  Liest das naechste Byte der aktuellen Datei.
  * @param  Keine

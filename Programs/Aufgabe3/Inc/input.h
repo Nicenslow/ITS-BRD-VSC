@@ -23,6 +23,15 @@ extern void openNextFile(void);
 extern void discardRestOfFile(void);
 
 /**
+ * @brief  Markiert die aktuelle Datei nach einem Fehler als abgebrochen.
+ *         Beim naechsten Tastendruck (openNextFile) wird einmal 'S' gesendet,
+ *         ohne den Rest der Datei ueber UART einzulesen.
+ * @param  Keine
+ * @retval Keiner (void)
+ */
+extern void markFileIncomplete(void);
+
+/**
  * @brief  Liest das naechste Byte der aktuellen Datei.
  * @param  Keine
  * @retval Byte (0..255) oder EOF (-1) am Dateiende
