@@ -90,7 +90,8 @@ void fsm_update(FsmState_t newPhase, uint32_t timestamp) {
 }
 
 /**
- * @brief  Loescht den Fehlerzustand und synchronisiert auf die aktuelle Phase.
+ * @brief  Loescht den Fehlerzustand und synchronisiert auf die aktuelle Phase
+ *         (z. B. nach Fortsetzen per Reset-Taste).
  * @param  currentPhase  aktuell gemessene Phase am Drehgeber
  * @retval None
  */

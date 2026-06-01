@@ -25,17 +25,17 @@
 #define DISPLAY_VALUE_BUF_LEN 24
 /** @brief Breite des Winkel-Vorkommateils fuer feste Ausgabe mit einer Nachkommastelle. */
 #define DISPLAY_ANGLE_WHOLE_FIELD_WIDTH 4
-/** @brief Breite des Geschwindigkeitsfelds, damit alte Ziffern sicher ueberschrieben werden. */
-#define DISPLAY_VELOCITY_FIELD_WIDTH 4
+/** @brief Vorkommastellen-Breite fuer die Geschwindigkeitsanzeige. */
+#define DISPLAY_VELOCITY_WHOLE_FIELD_WIDTH 5
 
-static int32_t s_lastAngleTenths  = INT32_MIN;
-static int32_t s_lastVelDegPerSec = INT32_MIN;
+static int32_t s_lastAngleTenths = INT32_MIN;
+static int32_t s_lastVelTenths   = INT32_MIN;
 
 static int32_t roundToInt32(double value) {
     return (value >= 0.0) ? (int32_t)(value + 0.5) : (int32_t)(value - 0.5);
 }
 
-static void formatTenths(char buf[], unsigned int bufLen, int32_t tenths) {
+static void formatTenths(char buf[], unsigned int bufLen, int32_t tenths, int wholeFieldWidth) {
     int32_t whole = tenths / 10;
     int32_t frac  = tenths % 10;
 
@@ -43,10 +43,7 @@ static void formatTenths(char buf[], unsigned int bufLen, int32_t tenths) {
         frac = -frac;
     }
 
-    (void)snprintf(buf, bufLen, "%*ld.%ld",
-                   DISPLAY_ANGLE_WHOLE_FIELD_WIDTH,
-                   (long)whole,
-                   (long)frac);
+    (void)snprintf(buf, bufLen, "%*ld.%ld", wholeFieldWidth, (long)whole, (long)frac);
 }
 
 /**
@@ -72,25 +69,25 @@ void display_init(void) {
  */
 void display_update(double angleDeg, double velDegPerSec) {
     int32_t iAngleTenths = roundToInt32(angleDeg * 10.0);
-    int32_t iVel         = roundToInt32(velDegPerSec);
+    int32_t iVelTenths   = roundToInt32(velDegPerSec * 10.0);
 
-    if (iAngleTenths == s_lastAngleTenths && iVel == s_lastVelDegPerSec) {
+    if (iAngleTenths == s_lastAngleTenths && iVelTenths == s_lastVelTenths) {
         return;
     }
 
     char buf[DISPLAY_VALUE_BUF_LEN];
 
     if (iAngleTenths != s_lastAngleTenths) {
-        formatTenths(buf, sizeof(buf), iAngleTenths);
+        formatTenths(buf, sizeof(buf), iAngleTenths, DISPLAY_ANGLE_WHOLE_FIELD_WIDTH);
         lcdGotoXY(VALUE_X, ROW_ANGLE_Y);
         lcdPrintReplS(buf);
         s_lastAngleTenths = iAngleTenths;
     }
 
-    if (iVel != s_lastVelDegPerSec) {
-        (void)snprintf(buf, sizeof(buf), "%*ld", DISPLAY_VELOCITY_FIELD_WIDTH, (long)iVel);
+    if (iVelTenths != s_lastVelTenths) {
+        formatTenths(buf, sizeof(buf), iVelTenths, DISPLAY_VELOCITY_WHOLE_FIELD_WIDTH);
         lcdGotoXY(VALUE_X, ROW_VEL_Y);
         lcdPrintReplS(buf);
-        s_lastVelDegPerSec = iVel;
+        s_lastVelTenths = iVelTenths;
     }
 }
