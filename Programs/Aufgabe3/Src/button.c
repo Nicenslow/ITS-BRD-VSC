@@ -1,3 +1,8 @@
+/**
+ * @file    button.c
+ * @brief   Taster am ITS-Adapter (PG0..PG5) und Nucleo-User-Taster (PC13).
+ */
+
 #include "button.h"
 
 #include "delay.h"
@@ -5,10 +10,15 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_nucleo_144.h"
 
-/** Adapter-Taster S1..S6 = INT0..INT5 an PG0..PG5 (active-low, Pull-up in initITSboard). */
 #define ITS_BUTTON_FIRST_PIN 0u
 #define ITS_BUTTON_LAST_PIN  5u
 
+/**
+ * @brief  Prueft, ob einer der Adapter-Taster S1..S6 gedrueckt ist.
+ * @param  Keine
+ * @retval true  Mindestens ein Taster aktiv (active-low)
+ * @retval false Kein Taster gedrueckt
+ */
 static bool isItsAdapterButtonPressed(void) {
     uint32_t idr = GPIOG->IDR;
 
@@ -20,6 +30,12 @@ static bool isItsAdapterButtonPressed(void) {
     return false;
 }
 
+/**
+ * @brief  Prueft den blauen User-Taster auf dem Nucleo-Board.
+ * @param  Keine
+ * @retval true  Taster gedrueckt
+ * @retval false Taster nicht gedrueckt
+ */
 static bool isNucleoUserButtonPressed(void) {
     return (HAL_GPIO_ReadPin(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN) == GPIO_PIN_RESET);
 }
@@ -40,6 +56,7 @@ bool button_isPressed(void) {
 }
 
 void button_waitForPress(void) {
+    /* Entprellen: Druck abwarten, kurz warten, Loslassen abwarten */
     while (!button_isPressed()) {
     }
     delay(30u);

@@ -2,41 +2,40 @@
 #define _INPUT_H
 
 /**
-* @brief This function setups communication protocol to Python send file program
-* @param None
-* @retval None
-*/
+ * @brief  Initialisiert UART/DMA und fuehrt Handshake mit Python durch (H, R, G).
+ * @param  Keine
+ * @retval Keiner (void)
+ */
 extern void initInput(void);
 
 /**
-* @brief This function asks the Python program to open a new file. 
-*        If all files has been read, it blocks until a new file has been
-*        selected in Python program.
-* @param None
-* @retval None
-*/
+ * @brief  Fordert beim PC die naechste BMP-Datei an (Befehl 'S').
+ * @param  Keine
+ * @retval Keiner (void)
+ */
 extern void openNextFile(void);
 
-/** Liest den Rest der aktuellen Datei bis EOF (leeres Paket). */
+/**
+ * @brief  Liest den Rest der aktuellen Datei bis EOF (leeres Paket).
+ * @param  Keine
+ * @retval Keiner (void)
+ */
 extern void discardRestOfFile(void);
 
 /**
-* @brief  This function reads the next byte from the current file that will be 
-*         transmitted by Python.
-* @param  None
-* @retval Next byte of the current file or EOF (32 bit value for -1)
-*/
+ * @brief  Liest das naechste Byte der aktuellen Datei.
+ * @param  Keine
+ * @retval Byte (0..255) oder EOF (-1) am Dateiende
+ */
 extern int nextChar(void);
 
 /**
-* @brief  This function reads count elements of data, each size bytes long, 
-*         from from the current file that will be transmitted by Python.
-* @param  buf   Storage buffer for data
-* @param  size  Size of each data element
-* @param  count Number of data elements
-* @retval Number of items read. If not enough data are available, EOF will be returned.
-*/
-extern int COMread(char*, unsigned int size, unsigned int count);
+ * @brief  Liest count Elemente mit je size Bytes aus der aktuellen Datei.
+ * @param  buf   Zielpuffer
+ * @param  size  Elementgroesse in Bytes
+ * @param  count Anzahl der Elemente
+ * @retval count bei Erfolg, EOF bei vorzeitigem Dateiende
+ */
+extern int COMread(char *buf, unsigned int size, unsigned int count);
 
-#endif
-// EOF
+#endif /* _INPUT_H */

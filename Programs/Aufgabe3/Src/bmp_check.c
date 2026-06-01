@@ -1,3 +1,8 @@
+/**
+ * @file    bmp_check.c
+ * @brief   Plausibilitaetspruefung der BMP-Header vor dem Einlesen der Pixeldaten.
+ */
+
 #include "bmp_check.h"
 #include "errorhandler.h"
 
@@ -5,6 +10,7 @@
 
 int basicChecks(const BITMAPFILEHEADER *fileHeader, const BITMAPINFOHEADER *infoHeader) {
     RETURN_NOK_ON_ERR(fileHeader == NULL || infoHeader == NULL, "basicChecks: null pointer");
+
     RETURN_NOK_ON_ERR(fileHeader->bfType != BMP_SIGNATURE, "basicChecks: wrong BMP signature");
     RETURN_NOK_ON_ERR(fileHeader->bfReserved1 != 0u || fileHeader->bfReserved2 != 0u,
                       "basicChecks: reserved fields not zero");

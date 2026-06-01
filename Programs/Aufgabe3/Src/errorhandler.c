@@ -1,3 +1,8 @@
+/**
+ * @file    errorhandler.c
+ * @brief   Fehlerbehandlung mit Anzeige auf dem LCD.
+ */
+
 #include <errorhandler.h>
 
 #include "lcd.h"
@@ -6,6 +11,11 @@
 #define BUF_SIZE     256
 static char buf[BUF_SIZE];
 
+/**
+ * @brief  Extrahiert den Dateinamen aus einem Pfad (ohne Verzeichnis).
+ * @param  path Vollstaendiger oder relativer Dateipfad
+ * @retval Zeiger auf den Dateinamen innerhalb von path
+ */
 static const char *fileBasename(const char *path) {
     const char *base = path;
 
@@ -18,28 +28,23 @@ static const char *fileBasename(const char *path) {
 }
 
 /**
-* @brief Simple error handler that writes an error msg on 
-*        LCD display and loops forever or returns EOK / NOK.
-*        To receive correct file name and line number, this 
-*        function should be called using der wrapper macro 
-*        ERR_HANDLER.
-* @param cnd  If this condition is true, an error will be reported.
-* @param file The file containing the current call of this function.
-* @param line Line number of the current call of this function
-* @param msg  Error message
-* @param loopForEver Don't return from this function call
-
-* @retval None
-*/
-
+ * @brief  Zeigt bei cnd==true eine Fehlermeldung auf dem LCD an.
+ * @param  cnd         true loest die Fehleranzeige aus
+ * @param  file        Quelldatei (__FILE__ aus Makro)
+ * @param  line        Zeilennummer (__LINE__ aus Makro)
+ * @param  msg         Fehlertext
+ * @param  loopForEver true: Programm haengt in Endlosschleife
+ * @retval EOK wenn kein Fehler, sonst NOK
+ */
 int printError(bool cnd, char *file, int line, char *msg, bool loopForEver) {
-   if (cnd){
-      lcdGotoXY(5, 5);
-      snprintf(buf, sizeof(buf) / sizeof(buf[0]), "%s:%d", fileBasename(file), line);
-      lcdPrintS(buf);
-      lcdPrintlnS(msg);
-      while(loopForEver) ;
-      return NOK;
-   }
-   return EOK;
-}// EOF
+    if (cnd) {
+        lcdGotoXY(5, 5);
+        snprintf(buf, sizeof(buf) / sizeof(buf[0]), "%s:%d", fileBasename(file), line);
+        lcdPrintS(buf);
+        lcdPrintlnS(msg);
+        while (loopForEver) {
+        }
+        return NOK;
+    }
+    return EOK;
+}

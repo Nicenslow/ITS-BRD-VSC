@@ -5,11 +5,13 @@
 
 #include "BMP_types.h"
 
-/** Teilaufgabe b: zeilenweise Ausgabe ueber GUI_WriteLine(1) statt GUI_drawPoint (0) */
+/** 1: zeilenweise mit GUI_WriteLine (Teilaufgabe b), 0: pixelweise mit GUI_drawPoint (a) */
 #define BMP_USE_WRITE_LINE 1
 
+/** Maximale Zeilenlaenge in Bytes (Puffergroesse) */
 #define BMP_MAX_ROW_BYTES 4096u
 
+/** Gelesene BMP-Kopfdaten und abgeleitete Werte fuer die Dekodierung */
 typedef struct {
     BITMAPFILEHEADER fileHeader;
     BITMAPINFOHEADER infoHeader;
@@ -18,6 +20,12 @@ typedef struct {
     uint32_t rowSize;
 } BmpImageInfo;
 
+/**
+ * @brief  Empfaengt und zeigt die naechste BMP-Datei vom PC.
+ * @param  Keine
+ * @retval EOK Erfolg
+ * @retval NOK Fehler beim Lesen oder Anzeigen
+ */
 int bmp_readAndDisplay(void);
 
 #endif /* AUFGABE3_BMP_H */

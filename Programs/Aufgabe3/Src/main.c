@@ -1,8 +1,6 @@
 /**
- ******************************************************************************
  * @file    main.c
- * @brief   Aufgabe 3: BMP-Empfang via USB-UART und Anzeige auf dem LCD.
- ******************************************************************************
+ * @brief   Aufgabe 3: BMP-Empfang per USB-UART und Anzeige auf dem LCD.
  */
 
 #include "init.h"
@@ -15,6 +13,11 @@
 #include "errorhandler.h"
 #include "input.h"
 
+/**
+ * @brief  Programmstart: Hardware initialisieren, dann Bildschleife mit Taster.
+ * @param  Keine
+ * @retval 0 (wird bei Endlosschleife nicht erreicht)
+ */
 int main(void) {
     initITSboard();
     initLCDTouch();
@@ -30,7 +33,7 @@ int main(void) {
         GUI_clear(BLACK);
 
         if (NOK == bmp_readAndDisplay()) {
-            /* Fehlertext steht bereits oben links (printError) */
+            /* Fehlermeldung wurde bereits auf dem LCD ausgegeben */
         }
     }
 }
