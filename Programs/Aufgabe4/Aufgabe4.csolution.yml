@@ -1,0 +1,26 @@
+solution:
+  created-for: CMSIS-Toolbox@2.4.0
+  cdefault:
+  compiler: AC6
+
+  packs:
+    - pack: Keil::STM32NUCLEO_BSP@1.8.1
+    - pack: Keil::STM32F4xx_DFP@2.17.1
+    - pack: ARM::CMSIS@6.1.0
+
+  target-types:
+    - type: ITSboard
+      board: STMicroelectronics::NUCLEO-F429ZI:Rev.B
+      device: STMicroelectronics::STM32F429ZITx
+
+  build-types:
+    - type: Debug
+      debug: on
+      optimize: none
+
+    - type: Release
+      debug: off
+      optimize: balanced
+
+  projects:
+    - project: Aufgabe4.cproject.yml
