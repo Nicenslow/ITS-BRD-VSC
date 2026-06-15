@@ -50,7 +50,7 @@ FsmState_t gpioIn_readPhase(void) {
 }
 
 /**
- * @brief  Liest Reset/Fehler-Taste S6 (active-low).
+ * @brief  Liest Reset-Taste S6 bzw. INT-Taster (active-low).
  * @param  None
  * @retval true wenn gedrueckt
  */

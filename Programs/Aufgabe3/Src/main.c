@@ -5,7 +5,7 @@
 
 #include "init.h"
 #include "LCD_GUI.h"
-#include "LCD_Touch.h"
+
 #include "lcd.h"
 
 #include "bmp.h"
@@ -26,7 +26,8 @@ int main(void) {
 
     GUI_clear(BLACK);
     lcdGotoXY(10, 10);
-    lcdPrintS("GUI: Start, dann S6");
+    lcdPrintS("GUI: Start, dann ");
+    lcdPrintlnS("blauen User-Button druecken");
 
     while (1) {
         button_waitForPress();

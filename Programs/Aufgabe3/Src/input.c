@@ -3,8 +3,8 @@
  * @brief   UART-Protokoll zur Datenuebertragung vom Python-Programm.
  */
 
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include "input.h"
 #include "errorhandler.h"
 #include "lcd.h"
@@ -132,6 +132,7 @@ void fillBuf(int size) {
 
 static int nextCharPos = BUF_SIZE;
 static int noElemsInBuf = 0;
+static bool fileIncomplete = false;
 
 void initInput(void) {
 #ifdef USE_DMA
@@ -206,7 +207,26 @@ void discardRestOfFile(void) {
     }
 }
 
+void markFileIncomplete(void) {
+    fileIncomplete = true;
+}
+
 void openNextFile(void) {
+    if (fileIncomplete) {
+        /* Fehlerfall: Rest nicht byteweise lesen (sehr langsam bei grossen BMPs).
+         * Ein 'S' beim Tastendruck bricht die Datei am PC ab und holt das naechste Bild. */
+        fileIncomplete = false;
+#ifdef USE_DMA
+        char c;
+        while (0 != usbUartRead(&c, 1)) {
+        }
+#endif
+        noElemsInBuf = 0;
+        nextCharPos = BUF_SIZE;
+        startNextByteBurst(true);
+        return;
+    }
+
 #ifdef USE_DMA
     char c;
     while (0 != usbUartRead(&c, 1)) {

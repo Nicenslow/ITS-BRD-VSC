@@ -17,9 +17,9 @@
 #include "gpio_out.h"
 #include "timer_util.h"
 
-/** @brief Mindestzeit bis zur Auswertung bei erkanntem Phasenwechsel */
-#define TIME_WINDOW_SHORT_SEC (0.5)
-/** @brief maximales Zeitfenster fuer Auswertung */
+/** @brief Fruehestes Ende des Zeitfensters bei Phasenwechsel (Aufgabenblatt: 250 ms) */
+#define TIME_WINDOW_SHORT_SEC (0.25)
+/** @brief Spaetestes Ende des Zeitfensters (Aufgabenblatt: 500 ms) */
 #define TIME_WINDOW_LONG_SEC (0.5)
 
 /**
@@ -41,7 +41,9 @@ int main(void) {
 
     uint32_t t_window_start   = timerUtil_getTimestamp();
     int32_t  pulseCount_start = 0;
-    bool measurementPinState  = false;
+    bool     measurementPinState = false;
+    bool     processHalted    = false;
+    bool     resetBtnPrev     = false;
 
     while (1) {
         measurementPinState = !measurementPinState;
@@ -51,9 +53,21 @@ int main(void) {
         FsmState_t phase    = gpioIn_readPhase();
         bool       resetBtn = gpioIn_readResetButton();
 
-        if (resetBtn) {
+        /* S6 (Loslassen): Fehler loeschen (Aufgabenblatt) + Vorgang anhalten/fortsetzen (Prof-Feedback) */
+        if (resetBtnPrev && !resetBtn) {
             fsm_resetError(phase);
-            gpioOut_setErrorLED(false);
+            processHalted = !processHalted;
+            if (!processHalted) {
+                t_window_start   = now;
+                pulseCount_start = fsm_getPulseCount();
+            }
+        }
+        resetBtnPrev = resetBtn;
+
+        if (processHalted) {
+            gpioOut_setPulseCountLEDs(fsm_getPulseCount());
+            gpioOut_setDirectionLEDs(fsm_getDirection());
+            gpioOut_setErrorLED(fsm_hasError());
             continue;
         }
 
