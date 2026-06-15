@@ -1,5 +1,7 @@
 CompileFlags:
-  CompilationDatabase: c:\Users\danie\Desktop\ITS-BRD_VSC\ITS-BRD-VSC\Programs\Aufgabe4\out\Aufgabe4\ITSboard\Debug
+  CompilationDatabase: >-
+    c:\Users\danie\Desktop\ITS-BRD\ITS-BRD-VSC\Programs\Aufgabe4\out\Aufgabe4\ITSboard\Debug
   Add:
-    - -include
-    - c:\Users\danie\Desktop\ITS-BRD_VSC\ITS-BRD-VSC\Programs\Aufgabe4\out\Aufgabe4\ITSboard\Debug\compile_macros.h
+  - '-include'
+  - >-
+    c:\Users\danie\Desktop\ITS-BRD_VSC\ITS-BRD-VSC\Programs\Aufgabe4\out\Aufgabe4\ITSboard\Debug\compile_macros.h
