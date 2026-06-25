@@ -31,8 +31,10 @@
  * Werte aus Teilaufgabe 1 uebernehmen (Family-Byte beginnt mit 0x28).
  */
 static const uint8_t s_known_roms[][DS18X20_ROM_LEN] = {
-    {0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
+    {0x28, 0x0B, 0x04, 0x87, 0x0D, 0x00, 0x00, 0xB6},
+    {0x28, 0xFF, 0x5E, 0x89, 0x0D, 0x00, 0x00, 0x25},
+    {0x28, 0xC1, 0x06, 0x89, 0x0D, 0x00, 0x00, 0x70},
+    {0x28, 0xD2, 0xE2, 0x54, 0x0F, 0x00, 0x00, 0x64},
 };
 
 #define S_KNOWN_SENSOR_COUNT ((uint8_t)(sizeof(s_known_roms) / sizeof(s_known_roms[0])))
@@ -205,49 +207,56 @@ static void run_teilaufgabe2(void) {
 
 /**
  * @brief  Teilaufgabe 3: Search (AN187) findet alle Sensoren, dann Temperatur messen.
+ *
+ * Fehlende oder nicht erreichbare Sensoren werden still uebersprungen – die
+ * uebrigen bleiben auf dem Display. Beim Wiedereinstecken erscheint der Sensor
+ * im naechsten Zyklus automatisch wieder (neuer Search-Lauf).
  */
 static void run_teilaufgabe3(void) {
     DisplayTempSensor_t sensors[DISPLAY_TEMP_MAX_SENSORS];
 
     while (1) {
         uint8_t rom[DS18X20_ROM_LEN];
-        uint8_t count = 0U;
+        uint8_t roms[DISPLAY_TEMP_MAX_SENSORS][DS18X20_ROM_LEN];
+        uint8_t rom_count   = 0U;
+        uint8_t valid_count = 0U;
 
-        /* Ersten Sensor auf dem Bus suchen */
-        bool found = ow_search_first(rom);
-
-        if (!found) {
+        /* Phase 1: alle ROMs auf dem Bus suchen (ohne Mess-Pausen dazwischen) */
+        if (!ow_search_first(rom)) {
             display_temp_show_no_sensor_debug(ow_bus_read());
             timerUtil_sleepMs(MAIN_CYCLE_DELAY_MS);
             continue;
         }
 
-        /* Alle gefundenen Sensoren nacheinander messen */
         do {
-            if (count >= DISPLAY_TEMP_MAX_SENSORS) {
+            if (rom_count >= DISPLAY_TEMP_MAX_SENSORS) {
                 break;
             }
 
-            (void)memcpy(sensors[count].rom, rom, DS18X20_ROM_LEN);
-            sensors[count].temp_valid = false;
-
-            if (!ds18x20_start_conversion(rom)) {
-                display_temp_show_no_sensor_debug(ow_bus_read());
-                goto next_cycle;
-            }
-
-            if (!ds18x20_read_temperature(rom, &sensors[count].temp_celsius)) {
-                display_temp_show_crc_error();
-                goto next_cycle;
-            }
-
-            sensors[count].temp_valid = true;
-            count++;
+            (void)memcpy(roms[rom_count], rom, DS18X20_ROM_LEN);
+            rom_count++;
         } while (ow_search_next(rom));
 
-        display_temp_show_sensor_list(sensors, count);
+        /* Phase 2: messen – nicht erreichbare Sensoren ueberspringen, Rest anzeigen */
+        for (uint8_t i = 0U; i < rom_count; i++) {
+            if (valid_count >= DISPLAY_TEMP_MAX_SENSORS) {
+                break;
+            }
 
-    next_cycle:
+            if (!ds18x20_start_conversion(roms[i])) {
+                continue;
+            }
+
+            if (!ds18x20_read_temperature(roms[i], &sensors[valid_count].temp_celsius)) {
+                continue;
+            }
+
+            (void)memcpy(sensors[valid_count].rom, roms[i], DS18X20_ROM_LEN);
+            sensors[valid_count].temp_valid = true;
+            valid_count++;
+        }
+
+        display_temp_show_sensor_list(sensors, valid_count);
         timerUtil_sleepMs(MAIN_CYCLE_DELAY_MS);
     }
 }

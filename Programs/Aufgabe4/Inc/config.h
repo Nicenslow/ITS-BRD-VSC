@@ -18,7 +18,7 @@
  *   3 = Alle Sensoren per Search-Algorithmus finden und messen (Standard)
  */
 #ifndef AUFGABE4_TEILAUFGABE
-#define AUFGABE4_TEILAUFGABE 1
+#define AUFGABE4_TEILAUFGABE 3
 #endif
 
 #endif /* AUFGABE4_CONFIG_H */
