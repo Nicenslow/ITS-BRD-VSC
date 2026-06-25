@@ -1,7 +1,10 @@
 /**
  ******************************************************************************
  * @file    ow_search.h
- * @brief   1-Wire Search Algorithm gemaess Maxim Application Note 187.
+ * @brief   1-Wire Search-Algorithmus (AN187) – alle Sensoren am Bus finden.
+ *
+ * ow_search_first() startet eine neue Suche, ow_search_next() liefert
+ * weitere ROM-Codes, bis alle Geraete gefunden wurden.
  ******************************************************************************
  */
 
@@ -11,10 +14,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-/** @brief Anzahl Bits im 64-Bit-ROM-Code */
-#define OW_SEARCH_ROM_BITS 64U
-
-/** @brief Globaler Search-State gemaess AN187 (nur dieses Modul) */
+/** Letzter gefundener ROM-Code und Search-State (global laut AN187-Referenz) */
 extern uint8_t ROM_NO[8];
 extern int     LastDiscrepancy;
 extern int     LastFamilyDiscrepancy;

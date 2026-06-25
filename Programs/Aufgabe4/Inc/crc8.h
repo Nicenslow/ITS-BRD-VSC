@@ -1,7 +1,10 @@
 /**
  ******************************************************************************
  * @file    crc8.h
- * @brief   1-Wire CRC-8 (Polynom X^8 + X^5 + X^4 + 1, Lookup-Tabelle AN27).
+ * @brief   1-Wire CRC-8 gemaess Maxim Application Note 27.
+ *
+ * ROM:     CRC ueber Bytes 0..6, Ergebnis muss Byte 7 entsprechen.
+ * Scratch: CRC ueber Bytes 0..7, Ergebnis muss Byte 8 entsprechen.
  ******************************************************************************
  */
 
@@ -10,10 +13,7 @@
 
 #include <stdint.h>
 
-/** @brief Laenge des 1-Wire ROM-Codes ohne CRC-Byte */
-#define CRC8_ROM_DATA_LEN 7U
-
-/** @brief Laenge des Scratchpads ohne CRC-Byte */
+#define CRC8_ROM_DATA_LEN        7U
 #define CRC8_SCRATCHPAD_DATA_LEN 8U
 
 uint8_t crc8_update(uint8_t crc, uint8_t data);

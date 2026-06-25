@@ -1,7 +1,10 @@
 /**
  ******************************************************************************
  * @file    display_temp.c
- * @brief   Deutsche LCD-Ausgabe fuer 1-Wire-Temperatursensoren.
+ * @brief   LCD-Ausgabe fuer 1-Wire-Diagnose und Temperatur (Waveshare 4").
+ *
+ * Teilaufgabe 1: display_temp_show_teil1_live() – 4 Zeilen Live-Diagnose
+ * Teilaufgabe 2/3: display_temp_show_sensor_list() – ROM + Temperatur
  ******************************************************************************
  */
 
@@ -15,12 +18,8 @@
 #include "LCD_GUI.h"
 #include "lcd.h"
 
-/** @brief Schriftgroesse fuer die Sensorliste */
 #define DISPLAY_TEMP_FONT 12
-
-/** @brief Erste Textzeile (Zeichenkoordinaten) */
 #define DISPLAY_TEMP_ROW_START 1U
-/** @brief Zeilenabstand */
 #define DISPLAY_TEMP_ROW_STEP 2U
 
 typedef enum {
@@ -47,9 +46,9 @@ static void display_temp_goto_row(uint8_t row_index) {
     lcdGotoXY((POINT)1, y);
 }
 
-/** @brief Mindestbreite fuer lcdPrintReplS (Reste alter Texte vermeiden) */
 #define DISPLAY_TEIL1_LINE_WIDTH 24U
 
+/** Zeilen mit Leerzeichen auffuellen, damit lcdPrintReplS alte Textreste ueberschreibt */
 static void display_temp_pad_line(char line[], size_t len) {
     size_t n = strlen(line);
 
@@ -67,9 +66,6 @@ static void display_temp_format_rom(char *buf, unsigned int buf_len, const uint8
                    rom[4], rom[5], rom[6], rom[7]);
 }
 
-/**
- * @brief  Initialisiert die Display-Ausgabe.
- */
 void display_temp_init(void) {
     s_last_view           = DISPLAY_TEMP_VIEW_NONE;
     s_teil1_header_drawn  = false;
@@ -78,9 +74,6 @@ void display_temp_init(void) {
     lcdPrintS("1-Wire startet...");
 }
 
-/**
- * @brief  Zeigt die Fehlermeldung bei leerem Bus.
- */
 void display_temp_show_no_sensor(void) {
     if (s_last_view == DISPLAY_TEMP_VIEW_NO_SENSOR) {
         return;
@@ -140,30 +133,31 @@ void display_temp_show_diagnostic(const OwWiringTest_t *wiring, bool bus_high) {
 }
 
 /**
- * @brief  Live-Anzeige fuer Teilaufgabe 1 (Idle-DQ vor Reset, aktualisiert laufend).
+ * @brief  Live-Diagnose Teilaufgabe 1 (4 Zeilen, nur geaenderte Zeilen neu zeichnen).
+ *
+ * Zeile 1: PD0-Verdrahtungstest (Snapshot vom Start)
+ * Zeile 2: externer Pull-up + aktueller DQ-Pegel
+ * Zeile 3/4: je nach Fehlerfall oder ROM-Ergebnis
  */
-void display_temp_show_teil1_live(const OwWiringTest_t *wiring, bool idle_high, bool presence,
+void display_temp_show_teil1_live(const OwWiringTest_t *wiring, const OwPullupDiag_t *pullup,
+                                  OwResetResult_t reset_result, bool idle_high, bool presence,
                                   uint32_t cycle, bool rom_pending, bool rom_read_attempted,
                                   bool rom_ok, const uint8_t rom[8]) {
     char line1[48];
     char line2[48];
     char line3[48];
     char line4[48];
-    bool wiring_ok = (wiring != NULL && wiring->pd0_low_ok && wiring->pd0_high_ok);
+    bool pullup_ok = (pullup != NULL && pullup->bus_high_pd1_on && pullup->bus_low_pd1_off);
 
     (void)snprintf(line1, sizeof(line1), "PD0 Low:%s High:%s",
                    (wiring != NULL && wiring->pd0_low_ok) ? "OK" : "FAIL",
                    (wiring != NULL && wiring->pd0_high_ok) ? "OK" : "FAIL");
-    (void)snprintf(line2, sizeof(line2), "Idle DQ=%c  #%lu",
+    (void)snprintf(line2, sizeof(line2), "PD1 Pullup:%s DQ=%c #%lu",
+                   pullup_ok ? "OK" : "FAIL",
                    idle_high ? '1' : '0', (unsigned long)cycle);
 
-    if (!idle_high) {
-        (void)snprintf(line3, sizeof(line3), "Bus Low (GND?)");
-        (void)snprintf(line4, sizeof(line4), "Presence: %s", presence ? "ja" : "nein");
-    } else if (!wiring_ok) {
-        (void)snprintf(line3, sizeof(line3), "PD0 intern OK");
-        (void)snprintf(line4, sizeof(line4), "Presence: %s", presence ? "ja" : "nein");
-    } else if (rom_read_attempted && rom_ok && (rom != NULL)) {
+    /* Prioritaet: Erfolg/Fehler ROM > Presence > Pull-up-Fehler > kein Sensor */
+    if (rom_read_attempted && rom_ok && (rom != NULL)) {
         (void)snprintf(line3, sizeof(line3), "ROM gelesen:");
         (void)snprintf(line4, sizeof(line4), "%02X%02X%02X%02X%02X%02X%02X%02X",
                        rom[0], rom[1], rom[2], rom[3], rom[4], rom[5], rom[6], rom[7]);
@@ -176,9 +170,24 @@ void display_temp_show_teil1_live(const OwWiringTest_t *wiring, bool idle_high, 
     } else if (presence) {
         (void)snprintf(line3, sizeof(line3), "Presence erkannt");
         (void)snprintf(line4, sizeof(line4), "Warte auf ROM...");
+    } else if (pullup != NULL && !pullup->bus_high_pd1_on) {
+        (void)snprintf(line3, sizeof(line3), "Kein Pullup!");
+        (void)snprintf(line4, sizeof(line4), "PD1/R/DQ pruefen");
+    } else if (pullup != NULL && !pullup->bus_low_pd1_off) {
+        (void)snprintf(line3, sizeof(line3), "R nicht am Bus?");
+        (void)snprintf(line4, sizeof(line4), "PD0+DQ+R+PD1");
+    } else if (!idle_high) {
+        (void)snprintf(line3, sizeof(line3), "Bus Low (GND?)");
+        (void)snprintf(line4, sizeof(line4), "Presence: %s", presence ? "ja" : "nein");
+    } else if (reset_result == OW_RESET_NO_PULLUP) {
+        (void)snprintf(line3, sizeof(line3), "Reset: kein Pullup");
+        (void)snprintf(line4, sizeof(line4), "nach Reset Low");
+    } else if (reset_result == OW_RESET_NO_PRESENCE) {
+        (void)snprintf(line3, sizeof(line3), "Reset: kein Puls");
+        (void)snprintf(line4, sizeof(line4), "DQ am Sensor?");
     } else {
-        (void)snprintf(line3, sizeof(line3), "Kein Sensor");
-        (void)snprintf(line4, sizeof(line4), "Bus OK (Pullup)");
+        (void)snprintf(line3, sizeof(line3), "Pullup OK");
+        (void)snprintf(line4, sizeof(line4), "Kein Sensor (DQ?)");
     }
 
     display_temp_pad_line(line1, sizeof(line1));
@@ -205,9 +214,6 @@ void display_temp_show_teil1_live(const OwWiringTest_t *wiring, bool idle_high, 
     s_last_view = DISPLAY_TEMP_VIEW_TEIL1_LIVE;
 }
 
-/**
- * @brief  Zeigt die Fehlermeldung bei CRC-Fehler.
- */
 void display_temp_show_crc_error(void) {
     if (s_last_view == DISPLAY_TEMP_VIEW_CRC_ERROR) {
         return;
@@ -219,9 +225,6 @@ void display_temp_show_crc_error(void) {
     lcdPrintS("CRC-Fehler - Messung wiederholen");
 }
 
-/**
- * @brief  Gibt den ROM-Code eines einzelnen Sensors aus (Teilaufgabe 1).
- */
 void display_temp_show_rom_only(const uint8_t rom[8]) {
     char line[48];
     char screen[48];
@@ -245,9 +248,6 @@ void display_temp_show_rom_only(const uint8_t rom[8]) {
     lcdPrintS(line);
 }
 
-/**
- * @brief  Zeigt Index, ROM-Code und Temperatur fuer alle Sensoren.
- */
 void display_temp_show_sensor_list(const DisplayTempSensor_t sensors[], uint8_t count) {
     char line[56];
 

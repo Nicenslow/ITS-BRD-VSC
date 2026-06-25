@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * @file    timer_util.h
- * @brief   Zeitstempel und Wartezeiten auf Basis von timer.h (TIM2).
+ * @brief   Wartezeiten (us/ms) fuer 1-Wire und DS18B20-Konvertierung.
  ******************************************************************************
  */
 

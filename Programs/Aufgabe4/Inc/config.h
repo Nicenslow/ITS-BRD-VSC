@@ -1,7 +1,10 @@
 /**
  ******************************************************************************
  * @file    config.h
- * @brief   Konfiguration der aktiven Teilaufgabe fuer Aufgabe 4.
+ * @brief   Welche Teilaufgabe von Aufgabe 4 aktiv ist.
+ *
+ * Ueber AUFGABE4_TEILAUFGABE wird zur Compile-Zeit entschieden, welche
+ * run_teilaufgabeX()-Funktion in main.c eingebunden wird.
  ******************************************************************************
  */
 
@@ -9,10 +12,10 @@
 #define AUFGABE4_CONFIG_H
 
 /**
- * Aktive Teilaufgabe:
- *   1 = Einzelner Sensor, ROM lesen
- *   2 = Mehrere Sensoren mit bekannten ROM-Codes
- *   3 = Automatische Erkennung (Search Algorithm)
+ * Aktive Teilaufgabe (nur eine gleichzeitig):
+ *   1 = Ein Sensor, ROM lesen und auf Display anzeigen (Diagnose-Modus)
+ *   2 = Mehrere Sensoren mit fest eingetragenen ROM-Codes messen
+ *   3 = Alle Sensoren per Search-Algorithmus finden und messen (Standard)
  */
 #ifndef AUFGABE4_TEILAUFGABE
 #define AUFGABE4_TEILAUFGABE 1

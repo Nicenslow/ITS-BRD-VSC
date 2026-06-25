@@ -1,7 +1,10 @@
 /**
  ******************************************************************************
  * @file    timer_util.c
- * @brief   Wartezeiten und Zeitstempel ueber TIM2 (Aufgabe-2-Timer-Modul).
+ * @brief   Wartezeiten fuer 1-Wire und Temperaturmessung.
+ *
+ * Millisekunden: timerUtil_sleepMs() – z.B. 750 ms Konversionszeit, 1 s Startup.
+ * Mikrosekunden: DWT-Busy-Wait als Fallback (180 MHz).
  ******************************************************************************
  */
 
@@ -10,9 +13,9 @@
 
 #include "stm32f429xx.h"
 
-/** @brief CPU-Takte pro Mikrosekunde bei 180 MHz */
 #define CPU_CYCLES_PER_US 180U
 
+/** DWT-Zykluszaehler – unabhaengig von TIM2, fuer kurze exakte Delays */
 static void timerUtil_delayUsBusy(uint32_t us) {
     uint32_t start  = DWT->CYCCNT;
     uint32_t cycles = us * CPU_CYCLES_PER_US;
@@ -21,25 +24,16 @@ static void timerUtil_delayUsBusy(uint32_t us) {
     }
 }
 
-/**
- * @brief  Modul-Initialisierung (TIM2 + DWT-Fallback fuer Wartezeiten).
- */
 void timerUtil_init(void) {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CYCCNT = 0U;
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
 }
 
-/**
- * @brief  Liest den aktuellen Zeitstempel in Timer-Ticks.
- */
 uint32_t timerUtil_getTimestamp(void) {
     return getTimeStamp();
 }
 
-/**
- * @brief  Wartet die angegebene Zeit in Mikrosekunden (timer-basiert).
- */
 void timerUtil_sleepUs(uint32_t us) {
     if (us == 0U) {
         return;
@@ -58,9 +52,7 @@ void timerUtil_sleepUs(uint32_t us) {
     }
 }
 
-/**
- * @brief  Wartet die angegebene Zeit in Millisekunden (timer-basiert).
- */
+/** Blockierende Wartezeit in ms (Convert T: 750 ms, Startup: 1000 ms) */
 void timerUtil_sleepMs(uint32_t ms) {
     while (ms > 0U) {
         uint32_t chunk = (ms > 10U) ? 10U : ms;

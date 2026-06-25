@@ -1,13 +1,18 @@
 /**
  ******************************************************************************
  * @file    crc8.c
- * @brief   1-Wire CRC-8 mit Lookup-Tabelle gemaess Application Note 27.
+ * @brief   1-Wire CRC-8 (Maxim AN27) per Lookup-Tabelle.
+ *
+ * Verwendung:
+ *   ROM:     crc8_buf(rom, 7) == rom[7]
+ *   Scratch: crc8_buf(scratchpad, 8) == scratchpad[8]
+ *   Search:  Byte fuer Byte mit crc8_update waehrend ROM aufgebaut wird
  ******************************************************************************
  */
 
 #include "crc8.h"
 
-/** @brief CRC-Lookup-Tabelle aus Maxim AN27 */
+/** Vorberechnete Tabelle aus AN27 Example 3 (256 Eintraege) */
 static const uint8_t s_crc8_table[256] = {
     0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 65,
     157, 195, 33, 127, 252, 162, 64, 30, 95, 1, 227, 189, 62, 96, 130, 220,
@@ -27,16 +32,10 @@ static const uint8_t s_crc8_table[256] = {
     116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53
 };
 
-/**
- * @brief  Aktualisiert den CRC-Wert mit einem weiteren Datenbyte.
- */
 uint8_t crc8_update(uint8_t crc, uint8_t data) {
     return s_crc8_table[crc ^ data];
 }
 
-/**
- * @brief  Berechnet den CRC-8 ueber einen Puffer (Startwert 0).
- */
 uint8_t crc8_buf(const uint8_t *buf, uint8_t len) {
     uint8_t crc = 0U;
 

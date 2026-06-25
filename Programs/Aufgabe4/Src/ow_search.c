@@ -1,7 +1,12 @@
 /**
  ******************************************************************************
  * @file    ow_search.c
- * @brief   Binary-Tree-Search mit Discrepancy-Tracking (AN187).
+ * @brief   1-Wire Search-Algorithmus nach Maxim AN187.
+ *
+ * Findet alle 64-Bit-ROM-Codes auf dem Bus ohne sie vorher zu kennen.
+ * Pro Durchlauf: Reset -> Search ROM (0xF0) -> 64x (2 Bits lesen, 1 Bit schreiben).
+ * Bei Widerspruch (0 und 1 am Bus) wird ein Pfad im Binärbaum gewählt;
+ * LastDiscrepancy merkt sich, wo beim nächsten Mal die andere Richtung probiert wird.
  ******************************************************************************
  */
 
@@ -10,7 +15,7 @@
 #include "1wire.h"
 #include "crc8.h"
 
-/** @brief Globaler Search-State gemaess AN187 */
+/** Globaler Search-State – wird zwischen ow_search_first/next beibehalten */
 uint8_t ROM_NO[8];
 int     LastDiscrepancy;
 int     LastFamilyDiscrepancy;
@@ -18,11 +23,15 @@ bool    LastDeviceFlag;
 
 static uint8_t s_search_crc8;
 
+/** CRC waehrend der Suche mitfuehren (muss am Ende 0 ergeben) */
 static uint8_t ow_search_docrc8(uint8_t value) {
     s_search_crc8 = crc8_update(s_search_crc8, value);
     return s_search_crc8;
 }
 
+/**
+ * @brief  Kern des Search-Algorithmus (AN187 Appendix, Funktion OWSearch).
+ */
 static bool ow_search_run(void) {
     int id_bit_number;
     int last_zero;
@@ -54,16 +63,20 @@ static bool ow_search_run(void) {
     ow_write_byte(OW_CMD_SEARCH_ROM);
 
     do {
+        /* Master liest echtes Bit und Komplement von allen Slaves */
         id_bit     = (int)ow_read_bit();
         cmp_id_bit = (int)ow_read_bit();
 
+        /* 1/1 = kein Geraet mehr auf dem Bus */
         if ((id_bit == 1) && (cmp_id_bit == 1)) {
             break;
         }
 
         if (id_bit != cmp_id_bit) {
+            /* Alle Slaves senden dasselbe Bit -> Pfad vorgegeben */
             search_direction = (uint8_t)id_bit;
         } else {
+            /* Widerspruch (0/0): Pfad laut LastDiscrepancy waehlen */
             if (id_bit_number < LastDiscrepancy) {
                 search_direction =
                     ((ROM_NO[rom_byte_number] & rom_byte_mask) > 0U) ? 1U : 0U;
@@ -98,6 +111,7 @@ static bool ow_search_run(void) {
         }
     } while (rom_byte_number < 8);
 
+    /* Erfolg: alle 64 Bits verarbeitet und CRC stimmt */
     if (!((id_bit_number < 65) || (s_search_crc8 != 0U))) {
         LastDiscrepancy = last_zero;
 
@@ -118,9 +132,7 @@ static bool ow_search_run(void) {
     return search_result;
 }
 
-/**
- * @brief  Sucht den ersten Sensor auf dem Bus.
- */
+/** Search neu starten – erster Sensor auf dem Bus */
 bool ow_search_first(uint8_t rom[8]) {
     LastDiscrepancy       = 0;
     LastDeviceFlag        = false;
@@ -137,9 +149,7 @@ bool ow_search_first(uint8_t rom[8]) {
     return true;
 }
 
-/**
- * @brief  Sucht den naechsten Sensor auf dem Bus.
- */
+/** Weiteren Sensor suchen – State von vorherigem Lauf behalten */
 bool ow_search_next(uint8_t rom[8]) {
     if (!ow_search_run()) {
         return false;
