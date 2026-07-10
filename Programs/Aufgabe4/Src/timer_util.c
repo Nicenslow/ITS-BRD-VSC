@@ -1,10 +1,14 @@
 /**
  ******************************************************************************
  * @file    timer_util.c
- * @brief   Wartezeiten fuer 1-Wire und Temperaturmessung.
+ * @brief   Wartezeiten fuer 1-Wire und DS18B20 (Erweiterung aus Aufgabe 2).
  *
- * Millisekunden: timerUtil_sleepMs() – z.B. 750 ms Konversionszeit, 1 s Startup.
- * Mikrosekunden: DWT-Busy-Wait als Fallback (180 MHz).
+ * === Zwei Timing-Quellen ===
+ *   Mikrosekunden: DWT-Busy-Wait (180 MHz) – exakt fuer 1-Wire-Slots
+ *   Millisekunden: timerUtil_sleepMs() – z.B. 750 ms Convert T, 1 s Startup
+ *
+ * timerUtil_sleepUs() nutzt primaer TIM2 (getTimeStamp), faellt bei Timeout
+ * auf DWT-Busy-Wait zurueck.
  ******************************************************************************
  */
 
@@ -24,6 +28,7 @@ static void timerUtil_delayUsBusy(uint32_t us) {
     }
 }
 
+/** DWT-Zykluszaehler einmalig aktivieren (wird auch in 1wire.c genutzt) */
 void timerUtil_init(void) {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
     DWT->CYCCNT = 0U;
@@ -52,7 +57,10 @@ void timerUtil_sleepUs(uint32_t us) {
     }
 }
 
-/** Blockierende Wartezeit in ms (Convert T: 750 ms, Startup: 1000 ms) */
+/**
+ * @brief  Blockierende Wartezeit in Millisekunden.
+ * Wird fuer parasitaere Sensor-Aufladung (1000 ms) und Convert T (750 ms) genutzt.
+ */
 void timerUtil_sleepMs(uint32_t ms) {
     while (ms > 0U) {
         uint32_t chunk = (ms > 10U) ? 10U : ms;

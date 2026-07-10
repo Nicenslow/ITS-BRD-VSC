@@ -1,12 +1,18 @@
 /**
  ******************************************************************************
  * @file    crc8.c
- * @brief   1-Wire CRC-8 (Maxim AN27) per Lookup-Tabelle.
+ * @brief   1-Wire CRC-8 (Maxim AN27) – Pruefsumme fuer ROM und Scratchpad.
  *
- * Verwendung:
- *   ROM:     crc8_buf(rom, 7) == rom[7]
- *   Scratch: crc8_buf(scratchpad, 8) == scratchpad[8]
- *   Search:  Byte fuer Byte mit crc8_update waehrend ROM aufgebaut wird
+ * === Prinzip ===
+ *   CRC wird Byte fuer Byte aktualisiert (crc8_update).
+ *   Lookup-Tabelle statt Bit-fuer-Bit-Berechnung (schneller auf dem MCU).
+ *
+ * === Verwendung im Projekt ===
+ *   ROM:       crc8_buf(rom, 7) muss == rom[7] sein
+ *   Scratchpad: crc8_buf(scratchpad, 8) muss == scratchpad[8] sein
+ *   Search:     CRC laeuft waehrend ROM-Aufbau mit (muss am Ende 0 ergeben)
+ *
+ * Polynom laut Aufgaben-PDF Abb. 2: x^8 + x^5 + x^4 + 1
  ******************************************************************************
  */
 
@@ -32,10 +38,12 @@ static const uint8_t s_crc8_table[256] = {
     116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53
 };
 
+/** Ein Byte in die laufende CRC einrechnen (fuer Search-Algorithmus) */
 uint8_t crc8_update(uint8_t crc, uint8_t data) {
     return s_crc8_table[crc ^ data];
 }
 
+/** CRC ueber ein Byte-Array berechnen (Startwert 0) */
 uint8_t crc8_buf(const uint8_t *buf, uint8_t len) {
     uint8_t crc = 0U;
 

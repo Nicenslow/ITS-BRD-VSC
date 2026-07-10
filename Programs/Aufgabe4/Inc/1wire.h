@@ -1,12 +1,11 @@
 /**
  ******************************************************************************
  * @file    1wire.h
- * @brief   1-Wire-Bus (ow = One-Wire): PD0 = Daten, PD1 = parasitaere Versorgung.
+ * @brief   1-Wire-Bus: Pin-Definitionen, Timing-Konstanten, ROM-Befehle.
  *
  * Hardware laut Aufgabenstellung:
- *   OUT0 / PD0  -> DQ des DS18B20 (Open-Drain)
- *   OUT1 / PD1  -> 3,3 V ueber Widerstand an den gemeinsamen DQ-Bus
- *   Widerstand  -> zwischen PD1 und demselben Knoten wie PD0/DQ
+ *   OUT0 / PD0  -> DQ des DS18B20 (Open-Drain, Daten)
+ *   OUT1 / PD1  -> 3,3 V ueber 3,3 kOhm an den gemeinsamen DQ-Bus (Versorgung)
  ******************************************************************************
  */
 
@@ -53,11 +52,11 @@ typedef enum {
 #define OW_READ_INIT_LOW_US 1U
 #define OW_READ_SAMPLE_US 14U
 
-/* --- Standard 1-Wire-ROM-Befehle --- */
-#define OW_CMD_SEARCH_ROM 0xF0U
-#define OW_CMD_MATCH_ROM  0x55U
-#define OW_CMD_SKIP_ROM   0xCCU
-#define OW_CMD_READ_ROM   0x33U
+/* --- Standard 1-Wire-ROM-Befehle (nach Reset senden) --- */
+#define OW_CMD_SEARCH_ROM 0xF0U   /* alle Sensoren suchen (Teilaufgabe 3) */
+#define OW_CMD_MATCH_ROM  0x55U   /* einen Sensor per ROM ansprechen */
+#define OW_CMD_SKIP_ROM   0xCCU   /* alle Sensoren (nur bei einem am Bus) */
+#define OW_CMD_READ_ROM   0x33U   /* ROM lesen (nur bei genau einem Sensor) */
 
 /** Ergebnis von ow_wiring_test(): kann PD0 den Bus direkt treiben? (nur Start-Test) */
 typedef struct {

@@ -1,11 +1,18 @@
 /**
  ******************************************************************************
  * @file    ds18x20.c
- * @brief   DS18B20 / DS18S20: ROM lesen, Temperatur messen, CRC pruefen.
+ * @brief   DS18B20 / DS18S20: Sensor-Befehle ueber den 1-Wire-Bus.
  *
- * Typischer Ablauf pro Sensor:
- *   ow_reset -> Match ROM (0x55 + 8 Bytes) -> Befehl -> Daten lesen/schreiben
- *   Bei Convert T: danach 750 ms starker Pull-up (parasitaere Versorgung).
+ * === Typischer Bus-Ablauf (nach jedem ow_reset) ===
+ *   1. Match ROM (0x55) + 8 Bytes ROM  – einen bestimmten Sensor waehlen
+ *      (oder Read ROM 0x33 bei genau einem Sensor – Teilaufgabe 1)
+ *   2. Funktionsbefehl senden (Convert T, Read Scratchpad, ...)
+ *   3. Daten lesen/schreiben
+ *   4. CRC pruefen (crc8.c, AN27)
+ *
+ * === Parasitaere Versorgung ===
+ *   Waehrend Convert T (0x44) braucht der Sensor viel Strom.
+ *   -> ow_strong_pullup_enable() haelt PD0+PD1 750 ms auf High.
  ******************************************************************************
  */
 
@@ -18,7 +25,7 @@
 #include "timer_util.h"
 #include "stm32f429xx.h"
 
-/** Einen bestimmten Sensor ansprechen (vor Read/Convert) */
+/** Match ROM (0x55): danach 8 ROM-Bytes senden, nur dieser Sensor hoert zu */
 static bool ds18x20_match_rom(const uint8_t rom[8]) {
     ow_write_byte(OW_CMD_MATCH_ROM);
 
@@ -29,7 +36,7 @@ static bool ds18x20_match_rom(const uint8_t rom[8]) {
     return true;
 }
 
-/** ROM-CRC: Bytes 0..6 muessen Byte 7 ergeben (AN27) */
+/** ROM-CRC: crc8 ueber Bytes 0..6 muss Byte 7 ergeben (sonst ungueltig) */
 static bool ds18x20_crc_rom_valid(const uint8_t rom[8]) {
     return (crc8_buf(rom, CRC8_ROM_DATA_LEN) == rom[7]);
 }
@@ -62,12 +69,12 @@ static bool ds18x20_temp_from_scratchpad(uint8_t family_code,
     return false;
 }
 
-/** Read ROM (0x33) – funktioniert nur wenn genau ein Sensor am Bus haengt */
+/** Read ROM (0x33) – liest 8 Bytes; funktioniert NUR bei genau einem Sensor */
 static bool ds18x20_read_rom_bytes(uint8_t rom[8]) {
-    ow_write_byte(OW_CMD_READ_ROM);
+    ow_write_byte(OW_CMD_READ_ROM);   /* Befehl 0x33 */
 
     for (uint8_t i = 0U; i < DS18X20_ROM_LEN; i++) {
-        rom[i] = ow_read_byte();
+        rom[i] = ow_read_byte();      /* 64 Bit Registration ROM, LSB first */
     }
 
     return ds18x20_crc_rom_valid(rom);
@@ -81,8 +88,10 @@ bool ds18x20_read_rom_after_presence(uint8_t rom[8]) {
 }
 
 /**
- * @brief  ROM lesen mit vorherigem Reset (Teilaufgabe 1).
- *         IRQs gesperrt, damit die 64 Bits ohne Unterbrechung kommen.
+ * @brief  ROM lesen inkl. Reset – Haupteinstieg fuer Teilaufgabe 1.
+ *
+ * Ablauf: ow_reset() -> Read ROM (0x33) -> 8 Bytes -> CRC pruefen.
+ * IRQs gesperrt, damit die 64 Bits ohne Unterbrechung uebertragen werden.
  */
 bool ds18x20_read_rom(uint8_t rom[8]) {
     bool     ok;
@@ -105,8 +114,12 @@ bool ds18x20_read_rom(uint8_t rom[8]) {
 }
 
 /**
- * @brief  Temperaturmessung starten: Match ROM + Convert T (0x44).
- *         Starker Pull-up haelt Bus 750 ms auf High (Strom fuer parasit. Betrieb).
+ * @brief  Temperaturmessung starten (Convert T, Befehl 0x44).
+ *
+ * Ablauf:
+ *   Reset -> Match ROM -> 0x44 senden
+ *   -> 750 ms starker Pull-up (PD0+PD1 High, parasit. Stromversorgung)
+ *   Sensor misst intern waehrend dieser Zeit.
  */
 bool ds18x20_start_conversion(const uint8_t rom[8]) {
     if (!ow_reset()) {
@@ -124,7 +137,10 @@ bool ds18x20_start_conversion(const uint8_t rom[8]) {
 }
 
 /**
- * @brief  Scratchpad lesen (0xBE) und Temperatur berechnen.
+ * @brief  Scratchpad lesen (0xBE) und Temperatur in °C berechnen.
+ *
+ * Scratchpad-Bytes 0+1 = Temperatur-Rohwert (16-Bit signed).
+ * Byte 8 = CRC – muss zu Bytes 0..7 passen.
  */
 bool ds18x20_read_temperature(const uint8_t rom[8], float *temp_celsius) {
     uint8_t scratchpad[DS18X20_SCRATCHPAD_LEN];

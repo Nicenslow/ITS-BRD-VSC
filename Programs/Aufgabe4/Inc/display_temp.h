@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * @file    display_temp.h
- * @brief   LCD-Ausgabe fuer Diagnose, ROM und Temperaturliste (Teilaufgaben 1–3).
+ * @brief   LCD-Ausgabe: Diagnose (Teil 1), Sensorliste mit Temperatur (Teil 2/3).
  ******************************************************************************
  */
 
@@ -15,10 +15,11 @@
 
 #define DISPLAY_TEMP_MAX_SENSORS 8U
 
+/** Ein Sensor-Eintrag fuer die Temperatur-Liste auf dem LCD */
 typedef struct {
-    uint8_t rom[8];
-    float   temp_celsius;
-    bool    temp_valid;
+    uint8_t rom[8];       /* 64-Bit Registration ROM als 8 Bytes */
+    float   temp_celsius; /* gemessene Temperatur in Grad Celsius */
+    bool    temp_valid;   /* true wenn Messung erfolgreich war */
 } DisplayTempSensor_t;
 
 void display_temp_init(void);

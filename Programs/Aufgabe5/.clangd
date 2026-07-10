@@ -1,0 +1,5 @@
+CompileFlags:
+  CompilationDatabase: c:\Users\danie\Desktop\ITS-BRD\ITS-BRD-VSC\Programs\Aufgabe5\out\Aufgabe5\ITSboard\Debug
+  Add:
+    - -include
+    - c:\Users\danie\Desktop\ITS-BRD\ITS-BRD-VSC\Programs\Aufgabe5\out\Aufgabe5\ITSboard\Debug\compile_macros.h

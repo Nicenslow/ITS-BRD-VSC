@@ -3,8 +3,14 @@
  * @file    display_temp.c
  * @brief   LCD-Ausgabe fuer 1-Wire-Diagnose und Temperatur (Waveshare 4").
  *
- * Teilaufgabe 1: display_temp_show_teil1_live() – 4 Zeilen Live-Diagnose
- * Teilaufgabe 2/3: display_temp_show_sensor_list() – ROM + Temperatur
+ * === Teilaufgabe 1 ===
+ *   display_temp_show_teil1_live() – 4 Zeilen Live-Diagnose:
+ *     Zeile 1: PD0-Verdrahtung (Low/High-Test vom Start)
+ *     Zeile 2: PD1-Pull-up + aktueller DQ-Pegel + Zykluszaehler
+ *     Zeile 3+4: Status (Presence, ROM, CRC-Fehler, kein Sensor, ...)
+ *
+ * === Teilaufgabe 2 und 3 ===
+ *   display_temp_show_sensor_list() – Liste: ROM-Hex + Temperatur in °C
  ******************************************************************************
  */
 
@@ -22,6 +28,7 @@
 #define DISPLAY_TEMP_ROW_START 1U
 #define DISPLAY_TEMP_ROW_STEP 2U
 
+/** Welche Ansicht gerade aktiv ist – vermeidet unnoetiges Neuzeichnen */
 typedef enum {
     DISPLAY_TEMP_VIEW_NONE = 0,
     DISPLAY_TEMP_VIEW_NO_SENSOR,
@@ -133,11 +140,10 @@ void display_temp_show_diagnostic(const OwWiringTest_t *wiring, bool bus_high) {
 }
 
 /**
- * @brief  Live-Diagnose Teilaufgabe 1 (4 Zeilen, nur geaenderte Zeilen neu zeichnen).
+ * @brief  Live-Diagnose fuer Teilaufgabe 1 (4 Zeilen, nur Aenderungen neu zeichnen).
  *
- * Zeile 1: PD0-Verdrahtungstest (Snapshot vom Start)
- * Zeile 2: externer Pull-up + aktueller DQ-Pegel
- * Zeile 3/4: je nach Fehlerfall oder ROM-Ergebnis
+ * Die Prioritaet in Zeile 3/4 (von oben nach unten):
+ *   ROM erfolgreich > CRC-Fehler > "Lese ROM..." > Presence > Pull-up-Fehler > kein Sensor
  */
 void display_temp_show_teil1_live(const OwWiringTest_t *wiring, const OwPullupDiag_t *pullup,
                                   OwResetResult_t reset_result, bool idle_high, bool presence,
@@ -156,7 +162,7 @@ void display_temp_show_teil1_live(const OwWiringTest_t *wiring, const OwPullupDi
                    pullup_ok ? "OK" : "FAIL",
                    idle_high ? '1' : '0', (unsigned long)cycle);
 
-    /* Prioritaet: Erfolg/Fehler ROM > Presence > Pull-up-Fehler > kein Sensor */
+    /* --- Zeile 3+4: Status nach Prioritaet waehlen --- */
     if (rom_read_attempted && rom_ok && (rom != NULL)) {
         (void)snprintf(line3, sizeof(line3), "ROM gelesen:");
         (void)snprintf(line4, sizeof(line4), "%02X%02X%02X%02X%02X%02X%02X%02X",
@@ -248,6 +254,7 @@ void display_temp_show_rom_only(const uint8_t rom[8]) {
     lcdPrintS(line);
 }
 
+/** Teilaufgabe 2/3: alle gefundenen Sensoren mit ROM und Temperatur anzeigen */
 void display_temp_show_sensor_list(const DisplayTempSensor_t sensors[], uint8_t count) {
     char line[56];
 

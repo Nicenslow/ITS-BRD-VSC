@@ -1,10 +1,10 @@
 /**
  ******************************************************************************
  * @file    config.h
- * @brief   Welche Teilaufgabe von Aufgabe 4 aktiv ist.
+ * @brief   Schalter: welche Teilaufgabe von Aufgabe 4 gebaut wird.
  *
- * Ueber AUFGABE4_TEILAUFGABE wird zur Compile-Zeit entschieden, welche
- * run_teilaufgabeX()-Funktion in main.c eingebunden wird.
+ * Hier wird NUR entschieden, welcher Code-Pfad in main.c aktiv ist.
+ * Die gemeinsame Hardware-Schicht (1wire, ds18x20, crc8) bleibt gleich.
  ******************************************************************************
  */
 
@@ -12,13 +12,18 @@
 #define AUFGABE4_CONFIG_H
 
 /**
- * Aktive Teilaufgabe (nur eine gleichzeitig):
- *   1 = Ein Sensor, ROM lesen und auf Display anzeigen (Diagnose-Modus)
- *   2 = Mehrere Sensoren mit fest eingetragenen ROM-Codes messen
- *   3 = Alle Sensoren per Search-Algorithmus finden und messen (Standard)
+ * Aktive Teilaufgabe (genau EINE zur Compile-Zeit):
+ *
+ *   1 – Basisfunktion: 1-Wire-Bits/Bytes, Presence, ROM eines Sensors lesen
+ *       (Aufgaben-PDF: "Teilaufgabe 1: Basisfunktionalität")
+ *
+ *   2 – Temperatur messen fuer mehrere Sensoren mit fest eingetragenen ROMs
+ *       (ROMs zuerst in Teilaufgabe 1 ermitteln, dann hier eintragen)
+ *
+ *   3 – Automatische Sensor-Erkennung per Search-Algorithmus + Temperatur
+ *       (kombiniert Teilaufgabe 1 und 2 vollstaendig)
  */
-#ifndef AUFGABE4_TEILAUFGABE
-#define AUFGABE4_TEILAUFGABE 3
-#endif
+/** Hier umstellen: 1, 2 oder 3 – danach neu bauen und flashen */
+#define AUFGABE4_TEILAUFGABE 2
 
 #endif /* AUFGABE4_CONFIG_H */
