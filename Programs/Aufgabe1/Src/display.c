@@ -48,9 +48,9 @@ void initDisplay(void) {
    clearStdout();
 }
 
-void printToEchoLine(char c) {
+void printToEchoLine(char echo_char) {
    char buf[2] = {'\0', '\0'};
-   buf[0] = c;
+   buf[0] = echo_char;
    printTerm(buf, &echo_term);
 }
 

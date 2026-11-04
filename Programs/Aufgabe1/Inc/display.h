@@ -47,10 +47,10 @@ void printStdout(char *msg);
  ****************************************************************************************
  * @brief Eine Ziffer auf dem unteren Echo-Terminal ausgeben.
  *
- * @param c Auszugebendes Zeichen.
+ * @param echo_char Auszugebendes Zeichen.
  ****************************************************************************************
  */
-void printToEchoLine(char c);
+void printToEchoLine(char echo_char);
 
 /*
  ****************************************************************************************
