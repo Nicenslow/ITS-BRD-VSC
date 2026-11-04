@@ -11,12 +11,12 @@
 #include <stdint.h>
 
 /* TIM2 zaehlt 90-mal je Mikrosekunde. */
-#define TICKS_PER_MICROSECOND 90u
-#define TICKS_PER_SECOND ((uint64_t)TICKS_PER_MICROSECOND * 1000000ull)
+#define TICKS_PER_MICROSECOND 90U
+#define TICKS_PER_SECOND ((uint64_t)TICKS_PER_MICROSECOND * 1000000ULL)
 
 /* Anzeige spaetestens alle 300 ms, sonst nach 3 s ohne Phasenwechsel. */
-#define DISPLAY_INTERVAL_TICKS (TICKS_PER_SECOND * 3ull / 10ull)
-#define DISPLAY_TIMEOUT_TICKS (TICKS_PER_SECOND * 3ull)
+#define DISPLAY_INTERVAL_TICKS (TICKS_PER_SECOND * 3ULL / 10ULL)
+#define DISPLAY_TIMEOUT_TICKS (TICKS_PER_SECOND * 3ULL)
 
 void timebase_init(void);
 

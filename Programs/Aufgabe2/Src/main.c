@@ -26,28 +26,24 @@ static void reset_program(PhaseSample sample) {
    display_submit(0.0, 0.0);
 }
 
-static void publish_measurement(int32_t count_start,
-                                uint64_t timestamp_start,
-                                bool count_changed) {
-   int32_t count_end = motion_count();
-   uint64_t timestamp_end = motion_change_timestamp();
+static void publish_measurement(CountSample start, bool count_changed) {
+   CountSample end;
    double velocity = 0.0;
 
+   end.count = motion_count();
+   end.timestamp = motion_change_timestamp();
+
    if (count_changed) {
-      velocity = angle_velocity_degrees_per_second(count_start,
-                                                   timestamp_start,
-                                                   count_end,
-                                                   timestamp_end);
+      velocity = angle_velocity_degrees_per_second(start, end);
    }
 
-   display_submit(angle_degrees(count_end), velocity);
+   display_submit(angle_degrees(end.count), velocity);
 }
 
 int main(void) {
    bool reset_was_down = false;
-   int32_t published_count = 0;
-   uint64_t published_timestamp = 0ull;
-   uint64_t last_display_tick = 0ull;
+   CountSample published;
+   uint64_t last_display_tick = 0ULL;
 
    initITSboard();
    initTimer();
@@ -58,8 +54,9 @@ int main(void) {
    motion_init();
    display_init();
 
-   published_timestamp = timebase_now();
-   last_display_tick = published_timestamp;
+   published.count = 0;
+   published.timestamp = timebase_now();
+   last_display_tick = published.timestamp;
 
    while (1) {
       PhaseSample sample = gpio_in_read_phase();
@@ -73,8 +70,8 @@ int main(void) {
 
       if (reset_pressed) {
          reset_program(sample);
-         published_count = 0;
-         published_timestamp = sample.timestamp;
+         published.count = 0;
+         published.timestamp = sample.timestamp;
          last_display_tick = sample.timestamp;
          continue;
       }
@@ -86,17 +83,16 @@ int main(void) {
          continue;
       }
 
-      count_changed = motion_count() != published_count;
+      count_changed = motion_count() != published.count;
       since_display = now - last_display_tick;
 
-      if (!display_is_busy()) {
-         if ((count_changed && (since_display >= DISPLAY_INTERVAL_TICKS)) ||
-             (since_display >= DISPLAY_TIMEOUT_TICKS)) {
-            publish_measurement(published_count, published_timestamp, count_changed);
-            published_count = motion_count();
-            published_timestamp = motion_change_timestamp();
-            last_display_tick = now;
-         }
+      if (!display_is_busy() &&
+          ((count_changed && (since_display >= DISPLAY_INTERVAL_TICKS)) ||
+           (since_display >= DISPLAY_TIMEOUT_TICKS))) {
+         publish_measurement(published, count_changed);
+         published.count = motion_count();
+         published.timestamp = motion_change_timestamp();
+         last_display_tick = now;
       }
 
       display_pump();

@@ -2,19 +2,20 @@
  * @file timebase.c
  * @author Daniel Biedermann, HAW Hamburg
  * @date November 2026
- * @brief 32-Bit-Ueberlaeufe des Timerregisters in einen 64-Bit-Zaehler uebernehmen.
+ * @brief 32-Bit-Ueberlaeufe des Timerregisters in einen 64-Bit-Zaehler
+ * uebernehmen.
  */
 
 #include "timebase.h"
 
 #include "timer.h"
 
-static uint32_t last_raw_count = 0u;
-static uint64_t accumulated_ticks = 0ull;
+static uint32_t last_raw_count = 0U;
+static uint64_t accumulated_ticks = 0ULL;
 
 void timebase_init(void) {
    last_raw_count = getTimeStamp();
-   accumulated_ticks = 0ull;
+   accumulated_ticks = 0ULL;
 }
 
 uint64_t timebase_now(void) {

@@ -74,10 +74,20 @@ static void test_full_turn(void) {
    expect_near("full turn", angle_degrees(PHASES_PER_REVOLUTION), 360.0);
 }
 
+static CountSample count_at(int32_t count, uint64_t timestamp) {
+   CountSample sample;
+   sample.count = count;
+   sample.timestamp = timestamp;
+   return sample;
+}
+
 static void test_velocity(void) {
-   double velocity = angle_velocity_degrees_per_second(0, 0, 4, TICKS_PER_SECOND);
+   double velocity = angle_velocity_degrees_per_second(
+       count_at(0, 0), count_at(4, TICKS_PER_SECOND));
    expect_near("1.2 deg/s", velocity, 1.2);
-   expect_near("no change", angle_velocity_degrees_per_second(3, 10, 3, 99), 0.0);
+   expect_near("no change",
+               angle_velocity_degrees_per_second(count_at(3, 10), count_at(3, 99)),
+               0.0);
 }
 
 int main(void) {

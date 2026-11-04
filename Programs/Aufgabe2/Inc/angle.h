@@ -13,16 +13,19 @@
 /* 300 Schlitze, vier Phasen je Schlitz. */
 #define PHASES_PER_REVOLUTION 1200
 
+/* Ein Zaehlerstand mit dem Zeitpunkt des Phasenwechsels, der ihn erzeugt hat.
+ */
+typedef struct {
+   int32_t count;
+   uint64_t timestamp;
+} CountSample;
+
 double angle_degrees(int32_t phase_count);
 
 /*
- * Geschwindigkeit aus zwei Zaehlerstaenden und den Zeitstempeln der
- * Phasenwechsel, die diese Staende erzeugt haben.
+ * Geschwindigkeit aus zwei Zaehlerstaenden.
  * Ohne fortgeschrittene Zeit oder ohne neuen Phasenwechsel: 0.
  */
-double angle_velocity_degrees_per_second(int32_t count_start,
-                                         uint64_t timestamp_start,
-                                         int32_t count_end,
-                                         uint64_t timestamp_end);
+double angle_velocity_degrees_per_second(CountSample start, CountSample end);
 
 #endif /* ANGLE_H */

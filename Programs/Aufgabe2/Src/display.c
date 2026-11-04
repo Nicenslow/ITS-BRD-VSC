@@ -29,8 +29,9 @@ typedef struct {
 static OutputLine output_lines[2];
 static int active_line = 2;
 
-static void format_line(OutputLine *line, POINT row, double value) {
-   int written = snprintf(line->text, sizeof(line->text), "%*.1f", VALUE_WIDTH - 1, value);
+static void format_line(OutputLine *line, double value) {
+   int written = snprintf(line->text, sizeof(line->text), "%*.1f",
+                          VALUE_WIDTH - 1, value);
    if (written < 0) {
       line->text[0] = '\0';
       line->length = 0;
@@ -40,7 +41,6 @@ static void format_line(OutputLine *line, POINT row, double value) {
       line->length = written;
    }
    line->next_index = 0;
-   line->row = row;
 }
 
 void display_init(void) {
@@ -53,14 +53,14 @@ void display_init(void) {
 }
 
 void display_submit(double angle_deg, double velocity_deg_per_sec) {
-   format_line(&output_lines[0], ANGLE_ROW, angle_deg);
-   format_line(&output_lines[1], VELOCITY_ROW, velocity_deg_per_sec);
+   output_lines[0].row = ANGLE_ROW;
+   format_line(&output_lines[0], angle_deg);
+   output_lines[1].row = VELOCITY_ROW;
+   format_line(&output_lines[1], velocity_deg_per_sec);
    active_line = 0;
 }
 
-bool display_is_busy(void) {
-   return active_line < 2;
-}
+bool display_is_busy(void) { return active_line < 2; }
 
 void display_pump(void) {
    OutputLine *line;

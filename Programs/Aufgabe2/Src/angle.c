@@ -15,18 +15,15 @@ double angle_degrees(int32_t phase_count) {
    return (double)phase_count * DEGREES_PER_PHASE;
 }
 
-double angle_velocity_degrees_per_second(int32_t count_start,
-                                         uint64_t timestamp_start,
-                                         int32_t count_end,
-                                         uint64_t timestamp_end) {
+double angle_velocity_degrees_per_second(CountSample start, CountSample end) {
    double elapsed_seconds;
-   int32_t count_delta = count_end - count_start;
+   int32_t count_delta = end.count - start.count;
 
    if (count_delta == 0) {
       return 0.0;
    }
 
-   elapsed_seconds = timebase_seconds_between(timestamp_start, timestamp_end);
+   elapsed_seconds = timebase_seconds_between(start.timestamp, end.timestamp);
    if (elapsed_seconds <= 0.0) {
       return 0.0;
    }

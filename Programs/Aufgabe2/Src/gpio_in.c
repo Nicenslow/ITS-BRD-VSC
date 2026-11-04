@@ -10,26 +10,25 @@
 #include "stm32f429xx.h"
 #include "timebase.h"
 
-#define CHANNEL_A_PIN 0u
-#define CHANNEL_B_PIN 1u
-#define RESET_BUTTON_PIN 6u
+#define CHANNEL_A_PIN 0U
+#define CHANNEL_B_PIN 1U
+#define RESET_BUTTON_PIN 6U
 
-void gpio_in_init(void) {
-}
+void gpio_in_init(void) {}
 
 PhaseSample gpio_in_read_phase(void) {
    uint32_t input_data = GPIOF->IDR;
-   unsigned int level_a = (input_data >> CHANNEL_A_PIN) & 1u;
-   unsigned int level_b = (input_data >> CHANNEL_B_PIN) & 1u;
+   unsigned int level_a = (input_data >> CHANNEL_A_PIN) & 1U;
+   unsigned int level_b = (input_data >> CHANNEL_B_PIN) & 1U;
    PhaseSample sample;
 
    sample.timestamp = timebase_now();
 
-   if ((level_a == 0u) && (level_b == 0u)) {
+   if ((level_a == 0U) && (level_b == 0U)) {
       sample.phase = PHASE_A;
-   } else if ((level_a == 1u) && (level_b == 0u)) {
+   } else if ((level_a == 1U) && (level_b == 0U)) {
       sample.phase = PHASE_B;
-   } else if ((level_a == 1u) && (level_b == 1u)) {
+   } else if ((level_a == 1U) && (level_b == 1U)) {
       sample.phase = PHASE_C;
    } else {
       sample.phase = PHASE_D;
@@ -40,5 +39,5 @@ PhaseSample gpio_in_read_phase(void) {
 
 bool gpio_in_read_reset_button(void) {
    uint32_t input_data = GPIOF->IDR;
-   return ((input_data >> RESET_BUTTON_PIN) & 1u) == 0u;
+   return ((input_data >> RESET_BUTTON_PIN) & 1U) == 0U;
 }
