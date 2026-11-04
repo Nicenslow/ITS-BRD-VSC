@@ -2,6 +2,8 @@
 
 Der Rechner ist in Eingabe, Daten, Rechnung und Ausgabe getrennt. `scanner` und `display` sind vorgegeben und kapseln Touch-Tastatur und LCD. Der eigene Code kennt dadurch weder Koordinaten noch die Entprellung der Tasten.
 
+Ein Pfeil zeigt, wohin Daten oder ein Auftrag gehen. Der Funktionsaufruf läuft oft in der Gegenrichtung: `main` ruft `nextToken()` auf, das fertige Token kommt auf dem Pfeil zum Hauptprogramm zurück.
+
 ```mermaid
 flowchart LR
     keypad[keypad]
@@ -15,19 +17,34 @@ flowchart LR
     display[display]
     terminal[terminal]
 
-    keypad --> scanner
-    token --> scanner
-    scanner --> main
-    main --> stack
-    main --> arithmetic
-    arithmetic --> stack
-    main --> format
-    main --> calcError
-    calcError --> display
-    scanner --> display
-    display --> terminal
-    display --> keypad
+    keypad -->|Taste| scanner
+    token -->|Tastentyp| scanner
+    scanner -->|Token| main
+    scanner -->|Echozeile| display
+    main -->|Zahl, d, r| stack
+    main -->|Operator| arithmetic
+    arithmetic -->|pop und push| stack
+    main -->|p und P| format
+    main -->|Ergebnis und Reset| display
+    main -->|Fehlercode| calcError
+    calcError -->|Fehlertext| display
+    display -->|Textflaechen| terminal
+    display -->|Tastatur zeichnen| keypad
 ```
+
+`keypad` ist die Touch-Tastatur. Der Scanner liest sie Taste für Taste. `token` ist kein zweites Eingabegerät, sondern der Datentyp für das, was eine Taste bedeutet. Enter bleibt im Scanner. Nach außen geht nur das fertige Token.
+
+`main` verteilt dieses Token. Eine Zahl, `d` und `r` gehen an den Stack. `+`, `-`, `*` und `/` gehen an die Arithmetik. Die Arithmetik nimmt die beiden obersten Werte selbst vom Stack, prüft den Bereich und legt das Ergebnis wieder ab. Bei einem Fehler liegen die beiden Werte danach wieder in der alten Reihenfolge oben.
+
+`format` rechnet nicht und schreibt nicht auf das LCD. `int_to_string` macht aus dem `int` einen Text im übergebenen Puffer. `main` benutzt das für `p` und `P` und gibt den Text danach selbst aus. Derselbe Weg schreibt nach einem quittierten Fehler `Reset.`
+
+Drei Wege erreichen das Display:
+
+- Der Scanner schreibt jede getippte Ziffer sofort in die Echozeile, noch bevor die Zahl fertig ist.
+- `calc_error` schreibt nur die rote Fehlerzeile. `main` übergibt dafür den `Result`-Code.
+- `main` schreibt normale Ergebnisse: die Zahl bei `p` und `P`, und `Reset.` nach `C`.
+
+`display` ist die einzige Stelle, die `terminal` kennt. Oben liegen Ergebnisse und Fehler, unten die laufende Eingabe. Der Pfeil zurück zum Keypad ist die Initialisierung: `initDisplay` zeichnet die Tastatur, bekommt das Rechteck daneben und teilt es in die beiden Terminals. Danach läuft über diesen Pfeil nichts mehr.
 
 ## token
 
